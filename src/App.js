@@ -560,7 +560,14 @@ class App extends PureComponent {
   componentDidMount() {
     // Need to set the renderNode since the drawer uses an overlay
     //this.dialog = document.getElementById('drawer-routing-example-dialog')
-    window.scrollTo(0, 0)
+    window.scrollTo(0, 0);
+    const queryParams = new URLSearchParams(window.location.search);
+    const dicom_file = queryParams.get('dicom_file');
+
+    if (dicom_file) {
+      this.setState({ visibleOpenUrl: true });
+    }
+    this.setState({ visibleOpenUrl: false });
   }
 
 

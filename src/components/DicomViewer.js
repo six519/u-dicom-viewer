@@ -125,6 +125,14 @@ class DicomViewer extends React.Component {
       this.layoutIndex = this.props.index
 
       document.getElementById(`viewer-${this.props.index}`).addEventListener("wheel", this.handlerMouseScroll)
+
+      const queryParams = new URLSearchParams(window.location.search);
+      const dicom_file = queryParams.get('dicom_file');
+  
+      if (dicom_file) {
+        this.showOpenUrlDlg(dicom_file);
+      }
+
     }
 
     componentWillUnmount() {
