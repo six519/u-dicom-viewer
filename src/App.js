@@ -2,6 +2,7 @@ import React, { PureComponent } from 'react'
 import { withStyles } from '@material-ui/core/styles'
 import {connect} from 'react-redux'
 import AboutDlg from './components/AboutDlg'
+import LoaderDlg from './components/LoaderDlg'
 import Dicomdir from './components/Dicomdir'
 import DicomViewer from './components/DicomViewer'
 import DicomHeader from './components/DicomHeader'
@@ -289,6 +290,7 @@ class App extends PureComponent {
     visibleMeasure: false,
     visibleClearMeasureDlg: false,
     visibleAbout: false,
+    visibleLoader: false,
     visibleDicomdir: false,
     visibleFileManager: false,
     visibleZippedFileDlg: false,
@@ -562,12 +564,63 @@ class App extends PureComponent {
     //this.dialog = document.getElementById('drawer-routing-example-dialog')
     window.scrollTo(0, 0);
     const queryParams = new URLSearchParams(window.location.search);
-    const dicom_file = queryParams.get('dicom_file');
+    const dicom_api = queryParams.get('dicom_api');
 
-    if (dicom_file) {
-      this.setState({ visibleOpenUrl: true });
+    if (dicom_api) {
+
+      this.files_to_load = [];
+      var _this = this;
+
+      fetch(dicom_api, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+      })
+      .then((response) => response.json())
+      .then((responseJson) => {
+
+        _this.files_to_load = responseJson.files;
+        _this.setState({visibleLoader: true});
+        _this.changeLayout(1, 1)
+        _this.mprPlane = ''
+        _this.volume = []
+        _this.files = []
+        _this.loaded_files = 0;
+        _this.clear()
+    
+        for(var x=0; x < _this.files_to_load.length; x++) {
+
+          fetch(_this.files_to_load[x])
+          .then(res => res.blob()) 
+          .then(blob => {
+
+            _this.files.push(blob);
+            _this.loaded_files += 1;
+
+            if (_this.loaded_files === _this.files_to_load.length) {
+              this.setState({visibleLoader: false});
+              _this.setState({sliceIndex: 0,
+                sliceMax: 1,
+                visibleMprOrthogonal: false, 
+                visibleMprCoronal: false, 
+                visibleMprSagittal: false, 
+                visibleMprAxial: false})
+              _this.setState({visibleOpenMultipleFilesDlg: true})
+            }
+
+
+          });
+
+        }
+
+      })
+      .catch((error) => {
+        alert("An unexpected error occurred!");
+      });
+  
     }
-    this.setState({ visibleOpenUrl: false });
+
   }
 
 
@@ -734,6 +787,10 @@ class App extends PureComponent {
 
   showAbout = () => {
     this.setState({ visibleAbout: !this.state.visibleAbout })
+  }
+
+  closeLoader = () => {
+    this.setState({ visibleLoader: false })
   }
   
   showSettings = () => {
@@ -1809,6 +1866,7 @@ class App extends PureComponent {
     const visibleHeader = this.state.visibleHeader
     const visibleSettings = this.state.visibleSettings
     const visibleAbout = this.state.visibleAbout
+    const visibleLoader = this.state.visibleLoader
     const visibleMeasure = this.state.visibleMeasure
     const visibleToolbox = this.state.visibleToolbox
     const visibleDicomdir = this.state.visibleDicomdir
@@ -2332,6 +2390,8 @@ class App extends PureComponent {
         {visibleSettings ? <Settings onClose={this.hideSettings}/> : null}
 
         {visibleAbout ? <AboutDlg onClose={this.showAbout}/> : null}
+
+        {visibleLoader ? <LoaderDlg onClose={this.closeLoader}/> : null}
 
         {visibleDownloadZipDlg ? <DownloadZipDlg onClose={this.hideDownloadZipDlg} url={this.url} /> : null}
 
