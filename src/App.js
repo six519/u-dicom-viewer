@@ -565,6 +565,12 @@ class App extends PureComponent {
     window.scrollTo(0, 0);
     const queryParams = new URLSearchParams(window.location.search);
     const dicom_api = queryParams.get('dicom_api');
+    const dicom_zip = queryParams.get('dicom_zip');
+
+    if (dicom_zip) {
+      this.url = dicom_zip;
+      this.confirmZippedFileDlg();
+    }
 
     if (dicom_api) {
 
